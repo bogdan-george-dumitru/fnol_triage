@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FNOL Triage — Review</title>
+<style>
+  :root {
+    --bg: #f4f6fa; --panel: #ffffff; --ink: #1c2436; --muted: #6b7489;
+    --line: #e2e6ef; --accent: #2f54eb; --accent-ink: #fff;
+    --green: #1a7f37; --green-bg: #e6f4ea; --amber: #9a6700; --amber-bg: #fdf3d7;
+    --red: #b42318; --red-bg: #fde7e4;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.5 -apple-system, Segoe UI, Roboto, sans-serif;
+         background: var(--bg); color: var(--ink); }
+  header { background: var(--panel); border-bottom: 1px solid var(--line);
+           padding: 14px 22px; display: flex; align-items: center; gap: 14px; }
+  header h1 { font-size: 16px; margin: 0; }
+  header .prov { font-size: 12px; color: var(--muted); background: #eef1f7;
+                 padding: 2px 8px; border-radius: 10px; }
+  main { max-width: 1280px; margin: 0 auto; padding: 18px; }
+  .row { display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+          padding: 16px; }
+  .inbox { flex: 1 1 340px; min-width: 320px; }
+  .detail { flex: 2 1 640px; min-width: 340px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em;
+       color: var(--muted); margin: 0 0 10px; }
+  .uploader { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  input[type=file] { font-size: 13px; }
+  button { font: inherit; border: 1px solid var(--line); background: #fff; color: var(--ink);
+           padding: 7px 12px; border-radius: 7px; cursor: pointer; }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  button:disabled { opacity: .5; cursor: default; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--line);
+           font-size: 13px; }
+  th { color: var(--muted); font-weight: 600; }
+  tr.item { cursor: pointer; }
+  tr.item:hover { background: #f7f9fd; }
+  tr.item.active { background: #eef2fe; }
+  .chip { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px;
+          font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
+  .chip.green { color: var(--green); background: var(--green-bg); }
+  .chip.amber { color: var(--amber); background: var(--amber-bg); }
+  .chip.red { color: var(--red); background: var(--red-bg); }
+  .chip.done { color: #344054; background: #eef1f7; }
+  .cols { display: flex; gap: 16px; flex-wrap: wrap; }
+  .src, .form { flex: 1 1 300px; min-width: 280px; }
+  .src pre { white-space: pre-wrap; word-wrap: break-word; background: #fbfbfd;
+             border: 1px solid var(--line); border-radius: 8px; padding: 12px;
+             max-height: 520px; overflow: auto; font: 13px/1.5 ui-monospace, Menlo, monospace; }
+  .src img { max-width: 100%; border: 1px solid var(--line); border-radius: 8px; }
+  .field { margin-bottom: 10px; }
+  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 3px; }
+  select, textarea, input[type=text] { width: 100%; font: inherit; padding: 6px 8px;
+          border: 1px solid var(--line); border-radius: 7px; background: #fff; }
+  textarea { resize: vertical; }
+  .edited { outline: 2px solid var(--amber); }
+  ul.reasons, ul.flags { margin: 4px 0 0; padding-left: 18px; }
+  ul.flags li { color: var(--amber); }
+  .meta { font-size: 12px; color: var(--muted); }
+  .alts button { font-size: 12px; padding: 3px 8px; margin: 2px 4px 2px 0; }
+  .policy { font-size: 12px; background: #fbfbfd; border: 1px solid var(--line);
+            border-radius: 8px; padding: 8px 10px; }
+  .policy.bad { color: var(--red); }
+  .banner { padding: 8px 12px; border-radius: 8px; margin-bottom: 10px; font-size: 13px; }
+  .banner.ok { background: var(--green-bg); color: var(--green); }
+  .banner.info { background: #eaf0ff; color: var(--accent); }
+  .draft { background: #fbfbfd; border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
+  .hint { font-size: 11px; color: var(--muted); }
+  .tabs { margin-left: auto; display: flex; gap: 6px; }
+  .tab { font-size: 13px; }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .hidden { display: none; }
+  .trow { display: flex; gap: 10px; align-items: center; margin-bottom: 6px; }
+  .trow label { flex: 1; font-size: 13px; color: var(--muted); }
+  .trow input { width: 150px; }
+  .edited-cell { background: var(--amber-bg); font-weight: 600; }
+  table.diff th, table.diff td { font-size: 12px; }
+  .stat { flex: 1 1 150px; }
+  .statv { font-size: 24px; font-weight: 700; margin-top: 4px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>FNOL Triage</h1>
+  <span class="prov" id="prov">provider …</span>
+  <span class="meta" id="cfgver"></span>
+  <nav class="tabs">
+    <button id="tabReview" class="tab active">Review queue</button>
+    <button id="tabConfig" class="tab">Workflow config</button>
+    <button id="tabMetrics" class="tab">Metrics</button>
+  </nav>
+</header>
+<main>
+  <div id="reviewView">
+  <div class="row">
+    <section class="card inbox">
+      <h2>Intake queue</h2>
+      <div class="uploader">
+        <input type="file" id="file" />
+        <button class="primary" id="uploadBtn">Upload &amp; triage</button>
+      </div>
+      <div id="uploadMsg" class="meta"></div>
+      <table>
+        <thead><tr><th>Status</th><th>Ref</th><th>Type</th><th>Queue</th></tr></thead>
+        <tbody id="inboxBody"><tr><td colspan="4" class="meta">No documents yet.</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="card detail" id="detail">
+      <h2>Review</h2>
+      <p class="meta">Select a document from the queue, or upload one.</p>
+    </section>
+  </div>
+  </div>
+  <div id="configView" class="hidden"></div>
+  <div id="metricsView" class="hidden"></div>
+</main>
+
+<script>
+let CONFIG = null;
+let CURRENT = null;
+
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.statusText);
+  return r.json();
+}
+
+function chip(status) {
+  const s = (status || '').toLowerCase();
+  return `<span class="chip ${s}">${s || '—'}</span>`;
+}
+
+async function loadHeader() {
+  const h = await api('/health');
+  document.getElementById('prov').textContent = 'provider: ' + h.provider;
+  CONFIG = await api('/api/config');
+  document.getElementById('cfgver').textContent = 'config v' + CONFIG.version;
+}
+
+async function loadInbox() {
+  const { documents } = await api('/api/documents');
+  const body = document.getElementById('inboxBody');
+  if (!documents.length) {
+    body.innerHTML = '<tr><td colspan="4" class="meta">No documents yet.</td></tr>';
+    return;
+  }
+  body.innerHTML = documents.map(d => `
+    <tr class="item ${CURRENT === d.doc_hash ? 'active' : ''}" data-h="${d.doc_hash}">
+      <td>${chip(d.status)} ${d.has_claim ? '<span class="chip done">booked</span>' : ''}</td>
+      <td>${d.claim_reference || ''}</td>
+      <td>${d.line_of_business || '—'}<br><span class="meta">${d.claim_type || ''}</span></td>
+      <td>${d.queue_label || d.queue || '—'}</td>
+    </tr>`).join('');
+  body.querySelectorAll('tr.item').forEach(tr =>
+    tr.addEventListener('click', () => openDetail(tr.dataset.h)));
+}
+
+function fmtSize(n) {
+  return n < 1024 ? n + ' B' : n < 1048576 ? (n / 1024).toFixed(0) + ' KB' : (n / 1048576).toFixed(1) + ' MB';
+}
+
+let triageTimer = null;
+
+async function upload() {
+  const input = document.getElementById('file');
+  const msg = document.getElementById('uploadMsg');
+  if (!input.files.length) { msg.textContent = 'Choose a file first.'; return; }
+  const btn = document.getElementById('uploadBtn');
+  const f = input.files[0];
+  btn.disabled = true;
+  const t0 = performance.now();
+  const tick = () => {
+    const s = ((performance.now() - t0) / 1000).toFixed(0);
+    msg.textContent = `Ingesting & triaging ${f.name}… ${s}s — the AI model can take ~10–15s.`;
+  };
+  tick();
+  triageTimer = setInterval(tick, 500);
+  try {
+    const fd = new FormData();
+    fd.append('file', f);
+    const res = await api('/api/documents', { method: 'POST', body: fd });
+    // Success: reset the uploader for the next document (clear the native filename too).
+    input.value = '';
+    msg.textContent = res.already_has_claim
+      ? 'Already booked (idempotent) — opened the existing claim.'
+      : '';
+    await loadInbox();
+    await openDetail(res.doc_hash);
+  } catch (e) { msg.textContent = 'Error: ' + e.message; }
+  finally { clearInterval(triageTimer); btn.disabled = false; }
+}
+
+function opts(list, selected, labelKey) {
+  return list.map(x => {
+    const key = typeof x === 'string' ? x : x.key;
+    const label = typeof x === 'string' ? x : x[labelKey];
+    return `<option value="${key}" ${key === selected ? 'selected' : ''}>${label}</option>`;
+  }).join('');
+}
+
+function claimTypeOptions(lob, selected) {
+  const l = CONFIG.lines_of_business.find(x => x.key === lob);
+  return opts(l ? l.claim_types : [], selected, 'label');
+}
+
+async function openDetail(h) {
+  CURRENT = h;
+  const data = await api('/api/documents/' + h);
+  renderDetail(data);
+  loadInbox();
+}
+
+function renderDetail(data) {
+  const p = data.proposal, doc = data.document, claim = data.claim;
+  const lobKeys = CONFIG.lines_of_business;
+  const src = doc.source_kind === 'image'
+    ? `<img src="${doc.raw_url}" alt="document" />`
+    : (doc.source_kind === 'pdf' && doc.ingestion_path === 'vision'
+        ? `<embed src="${doc.raw_url}" type="application/pdf" width="100%" height="520px" />`
+        : `<pre>${(doc.text || '(no text)').replace(/</g, '&lt;')}</pre>`);
+
+  const flags = p.flags && p.flags.length
+    ? `<ul class="flags">${p.flags.map(f => `<li>⚑ ${f.message}</li>`).join('')}</ul>` : '';
+  const reasons = p.reasons && p.reasons.length
+    ? `<ul class="reasons">${p.reasons.map(r => `<li>${r}</li>`).join('')}</ul>` : '';
+  const alts = p.alternatives && p.alternatives.length
+    ? `<div class="alts">Alternatives: ${p.alternatives.map(a =>
+        `<button type="button" data-alt="${a}">${a}</button>`).join('')}</div>` : '';
+
+  const pc = p.policy_check || {};
+  const policy = pc.found
+    ? `<div class="policy ${pc.status !== 'in_force' ? 'bad' : ''}">Policy ${pc.policy_number}
+       — ${pc.status}, ${pc.product}, inception ${pc.inception_date},
+       sum insured ${pc.sum_insured?.toLocaleString()} ${pc.currency}</div>`
+    : `<div class="policy bad">Policy ${pc.policy_number || '—'} — NOT FOUND</div>`;
+
+  const conf = p.classification ? Math.round(p.classification.confidence * 100) + '%' : '—';
+  const banner = claim
+    ? `<div class="banner ok">✓ Booked as ${claim.claim_reference} by
+       ${claim.approved_by || 'unknown'}${claim.edited ? ' (edited: ' + claim.edits.join(', ') + ')' : ''}.</div>`
+    : '';
+  const dupBanner = (p.possible_duplicates && p.possible_duplicates.length)
+    ? `<div class="banner" style="background:var(--amber-bg);color:var(--amber)">⚑ Possible duplicate of
+       ${p.possible_duplicates.join(', ')} — same policy, loss date &amp; claim type. Verify before booking.</div>`
+    : '';
+
+  document.getElementById('detail').innerHTML = `
+    <h2>Review — ${p.claim_reference} ${chip(p.status)}</h2>
+    ${banner}${dupBanner}
+    <div class="cols">
+      <div class="src">
+        <div class="meta">${doc.filename} · ${doc.source_kind} · ingestion: ${doc.ingestion_path}</div>
+        ${src}
+      </div>
+      <div class="form">
+        <div class="field"><label>Line of business</label>
+          <select id="f_lob">${opts(lobKeys, p.line_of_business, 'label')}</select></div>
+        <div class="field"><label>Claim type</label>
+          <select id="f_ct">${claimTypeOptions(p.line_of_business, p.claim_type)}</select></div>
+        ${alts}
+        <div class="field"><label>Severity</label>
+          <select id="f_sev">${opts(CONFIG.severities, p.severity)}</select></div>
+        <div class="field"><label>Queue (SLA)</label>
+          <select id="f_queue">${opts(CONFIG.queues, p.queue, 'label')}</select></div>
+        <div class="field"><label>Status</label>
+          <select id="f_status">${opts(CONFIG.statuses, p.status)}</select></div>
+        <div class="meta">AI classification confidence: ${conf}</div>
+        ${flags}
+        ${reasons ? '<div class="field"><label>Needs attention</label>' + reasons + '</div>' : ''}
+        ${policy}
+        ${p.draft ? `<div class="field" style="margin-top:12px"><label>Draft acknowledgment (${p.draft.language})</label>
+          <div class="draft"><strong>${p.draft.subject}</strong>
+          <textarea rows="7">${p.draft.body}</textarea>
+          <div class="hint">Draft only — not sent (out of scope).</div></div></div>` : ''}
+        <div class="field"><button id="reprocessBtn" ${claim ? 'disabled' : ''}>↻ Reprocess (current provider)</button>
+          <span id="reprocessMsg" class="meta"></span></div>
+        <div class="field"><label>Approver</label>
+          <input type="text" id="f_approver" placeholder="your name" value="${claim ? (claim.approved_by||'') : ''}" /></div>
+        <button class="primary" id="approveBtn" ${claim ? 'disabled' : ''}>
+          ${claim ? 'Already booked' : 'Approve & create claim'}</button>
+        <span id="approveMsg" class="meta"></span>
+      </div>
+    </div>`;
+
+  // claim-type depends on LOB
+  document.getElementById('f_lob').addEventListener('change', e => {
+    document.getElementById('f_ct').innerHTML = claimTypeOptions(e.target.value, null);
+    markEdited('f_lob', p.line_of_business);
+  });
+  // alternatives set the claim type
+  document.querySelectorAll('[data-alt]').forEach(b =>
+    b.addEventListener('click', () => { document.getElementById('f_ct').value = b.dataset.alt;
+                                        markEdited('f_ct', p.claim_type); }));
+  ['f_ct','f_sev','f_queue','f_status'].forEach(id => {
+    const orig = { f_ct: p.claim_type, f_sev: p.severity, f_queue: p.queue, f_status: p.status }[id];
+    document.getElementById(id).addEventListener('change', () => markEdited(id, orig));
+  });
+  const ab = document.getElementById('approveBtn');
+  if (ab && !claim) ab.addEventListener('click', () => approve(p.doc_hash));
+  const rb = document.getElementById('reprocessBtn');
+  if (rb && !claim) rb.addEventListener('click', () => reprocess(p.doc_hash));
+}
+
+async function reprocess(h) {
+  const msg = document.getElementById('reprocessMsg');
+  document.getElementById('reprocessBtn').disabled = true;
+  msg.textContent = 'Re-running AI…';
+  try {
+    const r = await api('/api/documents/' + h + '/reprocess', { method: 'POST' });
+    msg.textContent = 'Reprocessed with ' + r.provider + '.';
+    await openDetail(h);
+  } catch (e) {
+    msg.textContent = 'Error: ' + e.message;
+    document.getElementById('reprocessBtn').disabled = false;
+  }
+}
+
+function markEdited(id, orig) {
+  const el = document.getElementById(id);
+  el.classList.toggle('edited', el.value !== (orig || ''));
+}
+
+async function approve(h) {
+  const msg = document.getElementById('approveMsg');
+  const body = {
+    approved_by: document.getElementById('f_approver').value || null,
+    line_of_business: document.getElementById('f_lob').value,
+    claim_type: document.getElementById('f_ct').value,
+    severity: document.getElementById('f_sev').value,
+    queue: document.getElementById('f_queue').value,
+    status: document.getElementById('f_status').value,
+  };
+  document.getElementById('approveBtn').disabled = true;
+  try {
+    const res = await api('/api/documents/' + h + '/approve',
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    msg.textContent = res.created ? 'Claim created.' : 'Already booked (idempotent).';
+    await openDetail(h);
+  } catch (e) { msg.textContent = 'Error: ' + e.message;
+                document.getElementById('approveBtn').disabled = false; }
+}
+
+// ---- Workflow config view ----
+let DRAFT = null, VERSIONS = [];
+
+function showView(which) {
+  for (const v of ['review', 'config', 'metrics'])
+    document.getElementById(v + 'View').classList.toggle('hidden', which !== v);
+  document.getElementById('tabReview').classList.toggle('active', which === 'review');
+  document.getElementById('tabConfig').classList.toggle('active', which === 'config');
+  document.getElementById('tabMetrics').classList.toggle('active', which === 'metrics');
+  if (which === 'config') loadConfigView();
+  if (which === 'metrics') loadMetricsView();
+}
+
+function statCard(label, value, sub) {
+  return `<div class="card stat"><div class="meta">${label}</div>
+    <div class="statv">${value}</div>${sub ? `<div class="meta">${sub}</div>` : ''}</div>`;
+}
+function distTable(title, obj) {
+  const rows = Object.entries(obj || {}).sort((a, b) => b[1] - a[1])
+    .map(([k, v]) => `<tr><td>${k}</td><td style="text-align:right">${v}</td></tr>`).join('');
+  return `<section class="card" style="flex:1 1 200px"><h2>${title}</h2>
+    <table>${rows || '<tr><td class="meta">none</td></tr>'}</table></section>`;
+}
+
+async function loadMetricsView() {
+  const m = await api('/api/metrics');
+  const lat = m.latency_ms, c = m.cost, hr = m.human_review;
+  const ov = hr.override_rate === null ? '—' : Math.round(hr.override_rate * 100) + '%';
+  const provRows = Object.entries(m.by_provider || {}).map(([p, v]) =>
+    `<tr><td>${p}</td><td style="text-align:right">${v.documents}</td>
+     <td style="text-align:right">${v.latency_ms.p50 ?? '—'}</td>
+     <td style="text-align:right">${v.latency_ms.p95 ?? '—'}</td>
+     <td style="text-align:right">$${v.cost_per_document_usd.toFixed(5)}</td></tr>`).join('');
+  document.getElementById('metricsView').innerHTML = `
+    <div class="row" style="gap:12px">
+      ${statCard('Documents processed', m.documents_processed)}
+      ${statCard('Latency p50 / p95 (blended)', (lat.p50 ?? '—') + ' / ' + (lat.p95 ?? '—') + ' ms')}
+      ${statCard('Cost / document', '$' + c.per_document_usd.toFixed(5), 'total $' + c.total_usd.toFixed(5))}
+      ${statCard('Override rate', ov, hr.claims_edited + ' of ' + hr.claims_booked + ' claims edited')}
+      ${statCard('Avg tokens / doc', m.tokens.avg_per_doc)}
+    </div>
+    <div class="row" style="margin-top:4px">
+      <section class="card" style="flex:1 1 100%">
+        <h2>Latency &amp; cost by provider</h2>
+        <table class="diff"><thead><tr><th>Provider</th>
+          <th style="text-align:right">Docs</th>
+          <th style="text-align:right">p50 (ms)</th>
+          <th style="text-align:right">p95 (ms)</th>
+          <th style="text-align:right">$/doc</th></tr></thead>
+          <tbody>${provRows || '<tr><td class="meta">no runs</td></tr>'}</tbody></table>
+        <div class="hint">mock has no model call (sub-ms, $0); openai is a reasoning + vision call (seconds).</div>
+      </section>
+    </div>
+    <div class="row" style="gap:12px; margin-top:4px">
+      ${distTable('Status', m.status_distribution)}
+      ${distTable('Queue', m.queue_distribution)}
+      ${distTable('Ingestion path', m.ingestion_path_distribution)}
+      ${distTable('Provider', m.provider_distribution)}
+      ${distTable('Field overrides', hr.field_overrides)}
+    </div>`;
+}
+
+async function loadConfigView() {
+  const d = await api('/api/config/full');
+  DRAFT = d.config; VERSIONS = d.versions;
+  renderConfigView();
+}
+
+function queueOptions(selected) {
+  return DRAFT.queues.map(q =>
+    `<option value="${q.key}" ${q.key === selected ? 'selected' : ''}>${q.label}</option>`).join('');
+}
+
+function renderConfigView() {
+  const t = DRAFT.thresholds;
+  const versions = VERSIONS.map(v =>
+    `<tr><td>v${v.version} ${v.is_active ? '<span class="chip done">active</span>' : ''}</td>
+     <td>${v.label}</td><td class="meta">${v.author}</td>
+     <td>${v.is_active ? '' : `<button data-activate="${v.version}">Rollback</button>`}</td></tr>`).join('');
+  const routing = DRAFT.routing_rules.map((r, i) =>
+    `<tr><td>${r.key}</td><td class="meta">${r.line_of_business || 'any'} /
+     ${(r.claim_types || []).join(',') || 'any'} / ${(r.severities || []).join(',') || 'any'}</td>
+     <td><select data-routeq="${i}">${queueOptions(r.queue)}</select></td></tr>`).join('');
+  const sevOpts = (sel) => ['', 'fast_track', 'standard', 'complex']
+    .map(s => `<option value="${s}" ${s === (sel || '') ? 'selected' : ''}>${s || '—'}</option>`).join('');
+  const triggerCell = (f, i) => {
+    if (f.condition) return `<span class="meta">condition: ${f.condition}</span>`;
+    if (f.ai_predicate && !(f.keywords && f.keywords.length))
+      return `<input type="text" data-flagpred="${i}" value="${(f.ai_predicate || '').replace(/"/g, '&quot;')}"/>`;
+    return `<input type="text" data-flagkw="${i}" value="${(f.keywords || []).join(', ')}"/>`;
+  };
+  const flags = DRAFT.flag_rules.map((f, i) =>
+    `<tr><td>${f.key}${f.ai_predicate ? ' <span class="chip done">AI</span>' : ''}</td>
+     <td>${triggerCell(f, i)}</td>
+     <td><select data-flagq="${i}"><option value="">—</option>${queueOptions(f.force_queue)}</select></td>
+     <td><select data-flagsev="${i}">${sevOpts(f.min_severity)}</select></td>
+     <td><button data-flagdel="${i}" title="delete">×</button></td></tr>`).join('');
+  const lobOpts = DRAFT.lines_of_business.map(l => `<option value="${l.key}">${l.key}</option>`).join('');
+
+  document.getElementById('configView').innerHTML = `
+   <div class="row">
+     <section class="card" style="flex:1 1 300px">
+       <h2>Versions</h2>
+       <table><tbody>${versions}</tbody></table>
+       <div class="field" style="margin-top:12px"><label>Save current edits as a new version</label>
+         <input type="text" id="saveAuthor" placeholder="your name"/>
+         <input type="text" id="saveLabel" placeholder="what changed" style="margin-top:6px"/>
+         <button class="primary" id="saveCfgBtn" style="margin-top:8px">Validate &amp; save version</button>
+         <div class="meta" id="saveMsg" style="margin-top:6px"></div></div>
+     </section>
+     <section class="card" style="flex:2 1 520px">
+       <h2>Thresholds</h2>
+       <div class="trow"><label>Large-loss (property, RON)</label><input type="number" data-th="large_loss_property" value="${(t.large_loss_amount || {}).property || 0}"/></div>
+       <div class="trow"><label>Contestability window (days)</label><input type="number" data-th="contestability_days" value="${t.contestability_days}"/></div>
+       <div class="trow"><label>Auto-ready min confidence</label><input type="number" step="0.05" data-th="auto_ready" value="${t.auto_ready_min_confidence}"/></div>
+       <div class="trow"><label>Review min confidence</label><input type="number" step="0.05" data-th="review_min" value="${t.review_min_confidence}"/></div>
+       <h2 style="margin-top:16px">Routing rules → queue</h2>
+       <table><thead><tr><th>Rule</th><th>Match (LOB / type / severity)</th><th>Queue</th></tr></thead><tbody>${routing}</tbody></table>
+       <h2 style="margin-top:16px">Flags — trigger, queue &amp; severity</h2>
+       <table><thead><tr><th>Flag</th><th>Trigger (keywords / AI predicate)</th><th>Force queue</th><th>Min severity</th><th></th></tr></thead><tbody>${flags}</tbody></table>
+       <div style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:8px">
+         <div class="meta">Add a flag — keywords are matched in code; an AI predicate is judged by the model (its effect stays deterministic).</div>
+         <div style="display:flex;gap:8px;flex-wrap:wrap">
+           <input type="text" id="nf_key" placeholder="key (e.g. suspected_theft_ring)" style="flex:1"/>
+           <input type="text" id="nf_label" placeholder="label" style="flex:1"/>
+         </div>
+         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+           <select id="nf_lob"><option value="">all LOBs</option>${lobOpts}</select>
+           <select id="nf_type"><option value="ai_predicate">AI predicate</option><option value="keywords">keywords</option></select>
+           <select id="nf_queue"><option value="">no forced queue</option>${queueOptions(null)}</select>
+           <select id="nf_sev">${sevOpts('')}</select>
+         </div>
+         <input type="text" id="nf_trigger" placeholder="describe the flag in words (AI), or comma-separated keywords"/>
+         <div><button id="addFlagBtn">Add flag</button> <span class="meta" id="addFlagMsg"></span></div>
+       </div>
+       <div style="margin-top:14px"><button class="primary" id="previewBtn">Preview changes</button>
+         <span class="meta" id="previewMsg"></span></div>
+       <div id="previewOut" style="margin-top:12px"></div>
+     </section>
+   </div>`;
+  wireConfigControls();
+}
+
+function syncDraftFromForm() {
+  document.querySelectorAll('[data-th]').forEach(el => {
+    const v = parseFloat(el.value), k = el.dataset.th;
+    if (k === 'large_loss_property') DRAFT.thresholds.large_loss_amount.property = v;
+    if (k === 'contestability_days') DRAFT.thresholds.contestability_days = v;
+    if (k === 'auto_ready') DRAFT.thresholds.auto_ready_min_confidence = v;
+    if (k === 'review_min') DRAFT.thresholds.review_min_confidence = v;
+  });
+  document.querySelectorAll('[data-routeq]').forEach(el => { DRAFT.routing_rules[+el.dataset.routeq].queue = el.value; });
+  document.querySelectorAll('[data-flagkw]').forEach(el => {
+    DRAFT.flag_rules[+el.dataset.flagkw].keywords = el.value.split(',').map(s => s.trim()).filter(Boolean);
+  });
+  document.querySelectorAll('[data-flagpred]').forEach(el => { DRAFT.flag_rules[+el.dataset.flagpred].ai_predicate = el.value || null; });
+  document.querySelectorAll('[data-flagq]').forEach(el => { DRAFT.flag_rules[+el.dataset.flagq].force_queue = el.value || null; });
+  document.querySelectorAll('[data-flagsev]').forEach(el => { DRAFT.flag_rules[+el.dataset.flagsev].min_severity = el.value || null; });
+}
+
+function addFlag() {
+  syncDraftFromForm();
+  const msg = document.getElementById('addFlagMsg');
+  const key = document.getElementById('nf_key').value.trim();
+  if (!key) { msg.textContent = 'key is required'; return; }
+  if (DRAFT.flag_rules.some(f => f.key === key)) { msg.textContent = 'key already exists'; return; }
+  const type = document.getElementById('nf_type').value;
+  const trig = document.getElementById('nf_trigger').value.trim();
+  const lob = document.getElementById('nf_lob').value;
+  const nf = {
+    key, label: document.getElementById('nf_label').value.trim() || key,
+    applies_to: lob ? [lob] : [], applies_to_claim_types: [], keywords: [], condition: null,
+    params: {}, ai_predicate: null, min_severity: document.getElementById('nf_sev').value || null,
+    force_queue: document.getElementById('nf_queue').value || null, force_queue_priority: 10,
+    requires_review: true, message_ro: '', message_en: '',
+  };
+  if (type === 'keywords') nf.keywords = trig.split(',').map(s => s.trim()).filter(Boolean);
+  else nf.ai_predicate = trig;
+  if (!nf.keywords.length && !nf.ai_predicate) { msg.textContent = 'add keywords or a predicate'; return; }
+  DRAFT.flag_rules.push(nf);
+  renderConfigView();
+}
+
+function deleteFlag(i) {
+  syncDraftFromForm();
+  DRAFT.flag_rules.splice(i, 1);
+  renderConfigView();
+}
+
+function wireConfigControls() {
+  document.querySelectorAll('[data-activate]').forEach(b => b.addEventListener('click', async () => {
+    await api('/api/config/activate', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ version: +b.dataset.activate }) });
+    await loadHeader(); loadConfigView();
+  }));
+  document.querySelectorAll('[data-flagdel]').forEach(b => b.addEventListener('click', () => deleteFlag(+b.dataset.flagdel)));
+  const afb = document.getElementById('addFlagBtn');
+  if (afb) afb.addEventListener('click', addFlag);
+  document.getElementById('previewBtn').addEventListener('click', preview);
+  document.getElementById('saveCfgBtn').addEventListener('click', saveConfig);
+}
+
+async function preview() {
+  syncDraftFromForm();
+  const msg = document.getElementById('previewMsg'); msg.textContent = 'Running…';
+  const r = await api('/api/config/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ config: DRAFT }) });
+  if (r.errors && r.errors.length) {
+    msg.textContent = '';
+    document.getElementById('previewOut').innerHTML = '<div class="banner info">Config invalid: ' + r.errors.join('; ') + '</div>';
+    return;
+  }
+  msg.textContent = r.summary.changed_count + ' case(s) changed.';
+  const rows = r.rows.map(row => {
+    const ch = f => row.changed.includes(f) ? 'edited-cell' : '';
+    return `<tr><td>${row.name}</td>
+      <td class="${ch('status')}">${chip(row.active.status)} ${row.changed.includes('status') ? '→ ' + chip(row.proposed.status) : ''}</td>
+      <td class="${ch('queue')}">${row.active.queue}${row.changed.includes('queue') ? ' → ' + row.proposed.queue : ''}</td>
+      <td class="meta">${chip(row.expected_status)} ${row.expected_queue}</td></tr>`;
+  }).join('');
+  document.getElementById('previewOut').innerHTML =
+    `<table class="diff"><thead><tr><th>Case</th><th>Status (now→proposed)</th><th>Queue</th><th>Expected</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+async function saveConfig() {
+  syncDraftFromForm();
+  const msg = document.getElementById('saveMsg');
+  const author = document.getElementById('saveAuthor').value || 'ops';
+  const label = document.getElementById('saveLabel').value || 'edit';
+  const r = await api('/api/config/save', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ config: DRAFT, author, label }) });
+  if (r.errors && r.errors.length) { msg.textContent = 'Invalid: ' + r.errors.join('; '); return; }
+  msg.textContent = 'Saved & activated v' + r.version + '.';
+  await loadHeader(); loadConfigView();
+}
+
+document.getElementById('tabReview').addEventListener('click', () => showView('review'));
+document.getElementById('tabConfig').addEventListener('click', () => showView('config'));
+document.getElementById('tabMetrics').addEventListener('click', () => showView('metrics'));
+
+document.getElementById('uploadBtn').addEventListener('click', upload);
+// Instant feedback the moment a file is picked (independent of the native label).
+document.getElementById('file').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0];
+  document.getElementById('uploadMsg').textContent =
+    f ? `Selected: ${f.name} (${fmtSize(f.size)}) — click “Upload & triage”.` : '';
+});
+loadHeader().then(loadInbox).catch(e =>
+  document.getElementById('detail').innerHTML = '<p class="banner info">' + e.message +
+  ' — run <code>python -m scripts.seed</code> first.</p>');
+</script>
+</body>
+</html>

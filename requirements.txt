@@ -1,0 +1,9 @@
+# Runtime dependencies (pip fallback for reviewers without `uv`).
+# Dev/test extras are in requirements-dev.txt.
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pydantic>=2.7
+pydantic-settings>=2.3
+python-multipart>=0.0.9
+openai>=1.40
+pypdf>=4.2

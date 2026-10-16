@@ -1,0 +1,121 @@
+[
+  {
+    "path": "samples/water_damage_ro.eml",
+    "scenario": "clean free-text email, property water damage (RO)",
+    "lob": "property", "claim_type": "water_damage", "severity": "standard",
+    "status": "green", "queue": "property_standard", "flags": [],
+    "fields": {"policy_number": "PROP-2024-558120", "event_or_loss_date": "2025-10-06", "estimated_amount": 18500, "bodily_injury": false, "language": "ro"}
+  },
+  {
+    "path": "samples/fire_injury_ro.txt",
+    "scenario": "property fire with bodily injury (RO)",
+    "lob": "property", "claim_type": "fire", "severity": "complex",
+    "status": "amber", "queue": "property_complex", "flags": ["bodily_injury"],
+    "fields": {"policy_number": "PROP-2024-331050", "event_or_loss_date": "2025-10-05", "estimated_amount": 42000, "bodily_injury": true, "language": "ro"}
+  },
+  {
+    "path": "samples/death_claim_ro.txt",
+    "scenario": "life CPI death, certificate present, outside contestability (RO)",
+    "lob": "life_cpi", "claim_type": "death", "severity": "complex",
+    "status": "green", "queue": "life_death_claims", "flags": [],
+    "fields": {"policy_number": "CPI-2023-900341", "event_or_loss_date": "2025-10-02", "language": "ro"}
+  },
+  {
+    "path": "samples/unemployment_en.txt",
+    "scenario": "life CPI involuntary unemployment (EN)",
+    "lob": "life_cpi", "claim_type": "involuntary_unemployment", "severity": "standard",
+    "status": "green", "queue": "life_unemployment", "flags": [],
+    "fields": {"policy_number": "CPI-2025-114977", "loan_reference": "LN-889201", "event_or_loss_date": "2025-09-30", "language": "en"}
+  },
+  {
+    "path": "samples/handwritten_property_ro.png",
+    "scenario": "handwriting-font image, property storm, loss near inception (RO)",
+    "lob": "property", "claim_type": "storm_hail", "severity": "standard",
+    "status": "amber", "queue": "siu", "flags": ["fraud_near_inception", "catastrophe"],
+    "fields": {"policy_number": "PROP-2024-778310", "event_or_loss_date": "2025-10-08", "bodily_injury": false, "language": "ro"}
+  },
+  {
+    "path": "samples/badly_handwritten.png",
+    "scenario": "real handwriting image, property storm, loss near inception (RO)",
+    "lob": "property", "claim_type": "storm_hail", "severity": "standard",
+    "status": "amber", "queue": "siu", "flags": ["fraud_near_inception", "catastrophe"],
+    "fields": {"policy_number": "PROP-2024-778310", "event_or_loss_date": "2025-10-08", "bodily_injury": false, "language": "ro"}
+  },
+  {
+    "path": "eval/testset/typos_abbrev_ro.txt",
+    "scenario": "typos and abbreviations, property water damage (RO)",
+    "lob": "property", "claim_type": "water_damage", "severity": "standard",
+    "status": "green", "queue": "property_standard", "flags": [],
+    "fields": {"policy_number": "PROP-2024-558120", "event_or_loss_date": "2025-10-02", "estimated_amount": 7000, "language": "ro"}
+  },
+  {
+    "path": "eval/testset/storm_hail_ro.txt",
+    "scenario": "property storm/hail catastrophe (RO)",
+    "lob": "property", "claim_type": "storm_hail", "severity": "standard",
+    "status": "green", "queue": "cat_unit", "flags": ["catastrophe"],
+    "fields": {"policy_number": "PROP-2024-331050", "event_or_loss_date": "2025-09-28", "estimated_amount": 8500, "bodily_injury": false, "language": "ro"}
+  },
+  {
+    "path": "eval/testset/disability_ro.txt",
+    "scenario": "life CPI temporary incapacity (RO)",
+    "lob": "life_cpi", "claim_type": "temporary_incapacity", "severity": "standard",
+    "status": "green", "queue": "life_disability", "flags": [],
+    "fields": {"policy_number": "CPI-2025-114977", "event_or_loss_date": "2025-09-20", "language": "ro"}
+  },
+  {
+    "path": "eval/testset/theft_en.txt",
+    "scenario": "property theft/burglary (EN)",
+    "lob": "property", "claim_type": "theft_burglary", "severity": "standard",
+    "status": "green", "queue": "property_standard", "flags": [],
+    "fields": {"policy_number": "PROP-2024-558120", "event_or_loss_date": "2025-10-01", "estimated_amount": 12000, "bodily_injury": false, "language": "en"}
+  },
+  {
+    "path": "eval/testset/large_loss_ro.txt",
+    "scenario": "property fire above large-loss threshold (RO)",
+    "lob": "property", "claim_type": "fire", "severity": "complex",
+    "status": "amber", "queue": "property_complex", "flags": ["large_loss"],
+    "fields": {"policy_number": "PROP-2024-331050", "event_or_loss_date": "2025-09-29", "estimated_amount": 150000, "bodily_injury": false, "language": "ro"}
+  },
+  {
+    "path": "eval/testset/policy_not_found_ro.txt",
+    "scenario": "policy number not in the policy master (RO)",
+    "lob": "property", "claim_type": "water_damage", "severity": "standard",
+    "status": "amber", "queue": "property_standard", "flags": [],
+    "fields": {"policy_number": "PROP-9999-000000", "event_or_loss_date": "2025-10-03", "estimated_amount": 6000, "language": "ro"}
+  },
+  {
+    "path": "eval/testset/lapsed_policy_ro.txt",
+    "scenario": "policy lapsed / not in force (RO)",
+    "lob": "property", "claim_type": "fire", "severity": "standard",
+    "status": "amber", "queue": "property_standard", "flags": [],
+    "fields": {"policy_number": "PROP-2022-100200", "event_or_loss_date": "2025-09-30", "estimated_amount": 5000, "language": "ro"}
+  },
+  {
+    "path": "eval/testset/death_contestability_ro.txt",
+    "scenario": "life CPI death within contestability window (RO)",
+    "lob": "life_cpi", "claim_type": "death", "severity": "complex",
+    "status": "amber", "queue": "siu", "flags": ["contestability"],
+    "fields": {"policy_number": "CPI-2025-114977", "event_or_loss_date": "2025-06-01", "language": "ro"}
+  },
+  {
+    "path": "eval/testset/prompt_injection_ro.txt",
+    "scenario": "prompt injection inside the loss description (RO)",
+    "lob": "property", "claim_type": "water_damage", "severity": "standard",
+    "status": "green", "queue": "property_standard", "flags": [],
+    "fields": {"policy_number": "PROP-2024-558120", "event_or_loss_date": "2025-10-04", "estimated_amount": 9000, "language": "ro"}
+  },
+  {
+    "path": "eval/testset/missing_policy_ro.txt",
+    "scenario": "no policy/loan reference at all (RO)",
+    "lob": "property", "claim_type": "water_damage", "severity": "standard",
+    "status": "red", "queue": "manual_intake", "flags": [],
+    "fields": {"event_or_loss_date": null, "estimated_amount": 4000, "language": "ro"}
+  },
+  {
+    "path": "eval/testset/clean_claim_ro.pdf",
+    "scenario": "clean typed PDF with a text layer, property water damage (RO)",
+    "lob": "property", "claim_type": "water_damage", "severity": "standard",
+    "status": "green", "queue": "property_standard", "flags": [],
+    "fields": {"policy_number": "PROP-2024-331050", "event_or_loss_date": "2025-09-27", "estimated_amount": 11000, "bodily_injury": false, "language": "ro"}
+  }
+]
