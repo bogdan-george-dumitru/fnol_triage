@@ -375,10 +375,8 @@ and routes — it makes **no** medical, eligibility or payout decision; contesta
 - **[docs/PRESENTATIONS.md](docs/PRESENTATIONS.md)** — index of the two interview decks (the
   **main presentation** and the **appendix / deep-dives**): what each slide covers, the live
   links, and how to export to PDF/PPTX.
-- **[docs/PRESENTATION_RUNSHEET_RO.md](docs/PRESENTATION_RUNSHEET_RO.md)** — the speaker runsheet
-  (timeline, talk track, Q&A) used to deliver the presentation.
 - **[STAGES.md](STAGES.md)** — the stage-by-stage build log (what was built and the bugs found by
   running it on real data).
 
-Code and docs are in English (the runsheet is in Romanian). `.env` is gitignored and must never
+Code and docs are in English. `.env` is gitignored and must never
 be committed.
